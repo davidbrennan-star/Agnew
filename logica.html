@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logica – Campaign Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1eb;
+  --surface: #ffffff;
+  --surface2: #f9f7f3;
+  --border: #e2ddd4;
+  --ink: #1a1814;
+  --muted: #8a8378;
+  --accent: #d4420a;
+  --accent2: #2563a8;
+  --accent3: #1a7a4a;
+  --accent4: #9333a0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  background: var(--ink);
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: #f4f1eb;
+  letter-spacing: -.02em;
+}
+.logo span { color: var(--accent); }
+.header-meta {
+  font-size: 11px;
+  color: #8a8378;
+  text-align: right;
+  line-height: 1.6;
+}
+.header-meta strong { color: #f4f1eb; }
+
+/* MAIN */
+main { padding: 32px 40px; max-width: 1440px; margin: 0 auto; }
+
+/* SECTION LABEL */
+.section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* KPI STRIP */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  margin-bottom: 32px;
+  border: 2px solid var(--ink);
+}
+.kpi-block {
+  background: var(--surface);
+  padding: 20px 18px;
+  position: relative;
+  border-right: 2px solid var(--ink);
+}
+.kpi-block:last-child { border-right: none; }
+.kpi-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-block.orange::before { background: var(--accent); }
+.kpi-block.blue::before { background: var(--accent2); }
+.kpi-block.green::before { background: var(--accent3); }
+.kpi-block.purple::before { background: var(--accent4); }
+.kpi-block.dark::before { background: var(--ink); }
+.kpi-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+  letter-spacing: -.02em;
+}
+.kpi-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+.kpi-block.orange .kpi-value { color: var(--accent); }
+.kpi-block.blue .kpi-value { color: var(--accent2); }
+.kpi-block.green .kpi-value { color: var(--accent3); }
+.kpi-block.purple .kpi-value { color: var(--accent4); }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  padding: 24px;
+}
+.card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.card-tag {
+  font-size: 10px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+/* STAT ROW */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-name { color: var(--muted); font-size: 11px; }
+.stat-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+
+/* TIMELINE TABLE */
+.timeline {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.timeline th {
+  text-align: left;
+  padding: 6px 10px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--ink);
+  font-weight: 500;
+}
+.timeline td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+}
+.timeline tr:hover td { background: var(--surface2); }
+.timeline tr:last-child td { border-bottom: none; }
+.num { text-align: right; }
+.pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.pill-green { background: #dcfce7; color: #166534; }
+.pill-orange { background: #fff3e0; color: #b45309; }
+.pill-red { background: #fee2e2; color: #991b1b; }
+.pill-grey { background: #f1f5f9; color: #64748b; }
+
+canvas { max-height: 220px; }
+
+@media(max-width:1000px) {
+  .kpi-strip { grid-template-columns: repeat(3,1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  main, header { padding-left: 16px; padding-right: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PHY<span>RON</span> <span style="color:#8a8378;font-weight:400;font-size:14px">/ Logica</span></div>
+  <div class="header-meta">
+    <strong>Campaign: logica</strong><br>
+    January 2026 · Daily Feed Report
+  </div>
+</header>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="section-label">Snapshot — Latest Day (16 Jan)</div>
+  <div class="kpi-strip" id="kpiStrip"></div>
+
+  <!-- Charts row -->
+  <div class="section-label">Inventory Over Time</div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Products & Videos</span><span class="card-tag">daily</span></div>
+      <canvas id="inventoryChart"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Videos Created & Rejected</span><span class="card-tag">daily activity</span></div>
+      <canvas id="activityChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Avg Video Duration</span><span class="card-tag">seconds</span></div>
+      <canvas id="durationChart"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Stills</span><span class="card-tag">daily count</span></div>
+      <canvas id="stillsChart"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Period Summary</span><span class="card-tag">Jan 2026</span></div>
+      <div id="summaryStats"></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="section-label">Daily Breakdown</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="timeline">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th class="num">Products</th>
+          <th class="num">Videos</th>
+          <th class="num">Created</th>
+          <th class="num">Rejected</th>
+          <th class="num">Stills</th>
+          <th class="num">Avg Duration</th>
+          <th class="num">Avg Specs</th>
+          <th class="num">Avg Images</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+const DATA = [
+  {"date":"2026-01-01","num_products":146,"num_videos":139,"avg_specs":21.78,"avg_images":16.43,"avg_video_duration":42.23,"num_videos_created":0,"num_rejected_products":28,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-02","num_products":146,"num_videos":139,"avg_specs":21.78,"avg_images":16.43,"avg_video_duration":42.23,"num_videos_created":0,"num_rejected_products":28,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-03","num_products":145,"num_videos":138,"avg_specs":21.76,"avg_images":16.43,"avg_video_duration":42.19,"num_videos_created":0,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-04","num_products":141,"num_videos":134,"avg_specs":21.72,"avg_images":16.45,"avg_video_duration":42.24,"num_videos_created":0,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-05","num_products":141,"num_videos":134,"avg_specs":21.72,"avg_images":16.45,"avg_video_duration":42.24,"num_videos_created":0,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-06","num_products":138,"num_videos":131,"avg_specs":21.73,"avg_images":16.47,"avg_video_duration":42.25,"num_videos_created":0,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-07","num_products":138,"num_videos":131,"avg_specs":21.73,"avg_images":16.47,"avg_video_duration":42.25,"num_videos_created":0,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-08","num_products":138,"num_videos":131,"avg_specs":21.73,"avg_images":16.43,"avg_video_duration":42.16,"num_videos_created":3,"num_rejected_products":27,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-09","num_products":138,"num_videos":131,"avg_specs":21.86,"avg_images":16.41,"avg_video_duration":42.16,"num_videos_created":3,"num_rejected_products":24,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-10","num_products":136,"num_videos":130,"avg_specs":21.89,"avg_images":16.41,"avg_video_duration":42.21,"num_videos_created":1,"num_rejected_products":21,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-11","num_products":129,"num_videos":123,"avg_specs":21.92,"avg_images":16.44,"avg_video_duration":42.05,"num_videos_created":0,"num_rejected_products":21,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-12","num_products":130,"num_videos":123,"avg_specs":21.94,"avg_images":16.45,"avg_video_duration":42.08,"num_videos_created":1,"num_rejected_products":21,"num_stills":27,"num_stills_created":0},
+  {"date":"2026-01-13","num_products":134,"num_videos":127,"avg_specs":22.24,"avg_images":16.54,"avg_video_duration":42.25,"num_videos_created":4,"num_rejected_products":21,"num_stills":26,"num_stills_created":0},
+  {"date":"2026-01-14","num_products":139,"num_videos":132,"avg_specs":22.34,"avg_images":16.51,"avg_video_duration":42.14,"num_videos_created":6,"num_rejected_products":23,"num_stills":26,"num_stills_created":0},
+  {"date":"2026-01-15","num_products":139,"num_videos":133,"avg_specs":22.30,"avg_images":16.51,"avg_video_duration":42.27,"num_videos_created":2,"num_rejected_products":24,"num_stills":26,"num_stills_created":0},
+  {"date":"2026-01-16","num_products":139,"num_videos":133,"avg_specs":22.26,"avg_images":16.53,"avg_video_duration":42.30,"num_videos_created":0,"num_rejected_products":24,"num_stills":26,"num_stills_created":0}
+];
+
+const dates = DATA.map(d => d.date.slice(5)); // MM-DD
+const latest = DATA[DATA.length - 1];
+const totalCreated = DATA.reduce((a,d) => a + d.num_videos_created, 0);
+const maxRejected = Math.max(...DATA.map(d => d.num_rejected_products));
+const minRejected = Math.min(...DATA.map(d => d.num_rejected_products));
+
+// KPIs
+document.getElementById('kpiStrip').innerHTML = `
+  <div class="kpi-block orange">
+    <div class="kpi-label">Products</div>
+    <div class="kpi-value">${latest.num_products}</div>
+    <div class="kpi-sub">in feed today</div>
+  </div>
+  <div class="kpi-block blue">
+    <div class="kpi-label">Videos Live</div>
+    <div class="kpi-value">${latest.num_videos}</div>
+    <div class="kpi-sub">${Math.round(latest.num_videos/latest.num_products*100)}% coverage</div>
+  </div>
+  <div class="kpi-block green">
+    <div class="kpi-label">Created (MTD)</div>
+    <div class="kpi-value">${totalCreated}</div>
+    <div class="kpi-sub">videos this month</div>
+  </div>
+  <div class="kpi-block purple">
+    <div class="kpi-label">Rejected</div>
+    <div class="kpi-value">${latest.num_rejected_products}</div>
+    <div class="kpi-sub">peak was ${maxRejected}</div>
+  </div>
+  <div class="kpi-block dark">
+    <div class="kpi-label">Avg Duration</div>
+    <div class="kpi-value">${latest.avg_video_duration.toFixed(1)}s</div>
+    <div class="kpi-sub">avg video length</div>
+  </div>
+`;
+
+// Chart defaults
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.color = '#8a8378';
+
+const gridOpts = { color: '#e2ddd4' };
+const tickOpts = { color: '#8a8378', font: { size: 10 } };
+
+// Inventory chart
+new Chart(document.getElementById('inventoryChart'), {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [
+      { label: 'Products', data: DATA.map(d=>d.num_products), borderColor: '#d4420a', backgroundColor: 'rgba(212,66,10,0.08)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#d4420a' },
+      { label: 'Videos', data: DATA.map(d=>d.num_videos), borderColor: '#2563a8', backgroundColor: 'rgba(37,99,168,0.06)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#2563a8' }
+    ]
+  },
+  options: { responsive: true, plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } }, scales: { x: { ticks: tickOpts, grid: gridOpts }, y: { ticks: tickOpts, grid: gridOpts } } }
+});
+
+// Activity chart
+new Chart(document.getElementById('activityChart'), {
+  type: 'bar',
+  data: {
+    labels: dates,
+    datasets: [
+      { label: 'Videos Created', data: DATA.map(d=>d.num_videos_created), backgroundColor: '#1a7a4a', borderRadius: 3 },
+      { label: 'Rejected', data: DATA.map(d=>d.num_rejected_products), backgroundColor: '#fee2e2', borderColor: '#d4420a', borderWidth: 1, borderRadius: 3, yAxisID: 'y2' }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
+    scales: {
+      x: { ticks: tickOpts, grid: gridOpts },
+      y: { ticks: tickOpts, grid: gridOpts, title: { display: true, text: 'Created', color: '#8a8378', font: { size: 10 } } },
+      y2: { position: 'right', ticks: tickOpts, grid: { display: false }, title: { display: true, text: 'Rejected', color: '#8a8378', font: { size: 10 } } }
+    }
+  }
+});
+
+// Duration chart
+new Chart(document.getElementById('durationChart'), {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [{ label: 'Avg Duration (s)', data: DATA.map(d=>d.avg_video_duration.toFixed(2)), borderColor: '#9333a0', backgroundColor: 'rgba(147,51,160,0.07)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 2, pointBackgroundColor: '#9333a0' }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { ...tickOpts, maxRotation: 45 }, grid: gridOpts }, y: { ticks: tickOpts, grid: gridOpts, min: 41.8, max: 42.4 } } }
+});
+
+// Stills chart
+new Chart(document.getElementById('stillsChart'), {
+  type: 'bar',
+  data: {
+    labels: dates,
+    datasets: [{ label: 'Stills', data: DATA.map(d=>d.num_stills), backgroundColor: DATA.map(d => d.num_stills >= 27 ? '#2563a8' : '#d4420a'), borderRadius: 3 }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { ...tickOpts, maxRotation: 45 }, grid: gridOpts }, y: { ticks: tickOpts, grid: gridOpts, min: 25, max: 28 } } }
+});
+
+// Summary stats
+const avgDuration = (DATA.reduce((a,d)=>a+d.avg_video_duration,0)/DATA.length).toFixed(2);
+const avgProducts = Math.round(DATA.reduce((a,d)=>a+d.num_products,0)/DATA.length);
+const avgVideos = Math.round(DATA.reduce((a,d)=>a+d.num_videos,0)/DATA.length);
+document.getElementById('summaryStats').innerHTML = `
+  <div class="stat-row"><span class="stat-name">Avg Products/Day</span><span class="stat-val">${avgProducts}</span></div>
+  <div class="stat-row"><span class="stat-name">Avg Videos/Day</span><span class="stat-val">${avgVideos}</span></div>
+  <div class="stat-row"><span class="stat-name">Total Videos Created</span><span class="stat-val" style="color:#1a7a4a">${totalCreated}</span></div>
+  <div class="stat-row"><span class="stat-name">Peak Rejected</span><span class="stat-val" style="color:#d4420a">${maxRejected}</span></div>
+  <div class="stat-row"><span class="stat-name">Min Rejected</span><span class="stat-val" style="color:#1a7a4a">${minRejected}</span></div>
+  <div class="stat-row"><span class="stat-name">Avg Video Duration</span><span class="stat-val">${avgDuration}s</span></div>
+`;
+
+// Table
+document.getElementById('tableBody').innerHTML = DATA.map(d => {
+  const created = d.num_videos_created;
+  const pill = created > 3 ? `<span class="pill pill-green">+${created}</span>` : created > 0 ? `<span class="pill pill-orange">+${created}</span>` : `<span class="pill pill-grey">—</span>`;
+  const rejPill = d.num_rejected_products >= 27 ? `<span class="pill pill-red">${d.num_rejected_products}</span>` : `<span class="pill pill-orange">${d.num_rejected_products}</span>`;
+  return `<tr>
+    <td>${d.date}</td>
+    <td class="num">${d.num_products}</td>
+    <td class="num">${d.num_videos}</td>
+    <td class="num">${pill}</td>
+    <td class="num">${rejPill}</td>
+    <td class="num">${d.num_stills}</td>
+    <td class="num">${d.avg_video_duration.toFixed(2)}s</td>
+    <td class="num">${d.avg_specs.toFixed(1)}</td>
+    <td class="num">${d.avg_images.toFixed(1)}</td>
+  </tr>`;
+}).join('');
+</script>
+</body>
+</html>
