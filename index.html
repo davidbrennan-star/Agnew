@@ -61,7 +61,7 @@ main{padding:28px 36px;max-width:1440px;margin:0 auto}
 .funnel-wrap{display:flex;flex-direction:column;gap:10px}
 .funnel-row{display:flex;align-items:center;gap:12px}
 .funnel-label{width:75px;font-size:12px;color:var(--muted);flex-shrink:0}
-.funnel-bar-wrap{flex:1;height:28px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--surface2);border-radius:4px;overflow:visible;position:relative}
 .funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#ffffff}
 .funnel-pct{width:44px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0}
 .eng-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -279,15 +279,19 @@ function renderFunnel(data){
   document.getElementById('funnelTag').textContent=getSourceLabel();
   const stages=[{l:'Starts',e:'view_start'},{l:'25%',e:'view_25'},{l:'50%',e:'view_50'},{l:'75%',e:'view_75'},{l:'Complete',e:'view_end'}];
   const vals=stages.map(s=>sum(data,s.e));const max=vals[0]||1;
-  const colors=['#e8f03a','#a8c420','#6a9a10','#3a7008','#1a5004'];
-  document.getElementById('funnel').innerHTML=stages.map((s,i)=>`
-    <div class="funnel-row">
+  const colors=['#e8f03a','#3af0a0','#3a8ef0','#c97dff','#f03a8e'];
+  document.getElementById('funnel').innerHTML=stages.map((s,i)=>{
+    const w=Math.round(vals[i]/max*100);
+    const showInside=w>15;
+    return`<div class="funnel-row">
       <div class="funnel-label">${s.l}</div>
-      <div class="funnel-bar-wrap">
-        <div class="funnel-bar" style="width:${Math.round(vals[i]/max*100)}%;background:${colors[i]};min-width:${vals[i]>0?'60px':'0'}">${vals[i].toLocaleString()}</div>
+      <div class="funnel-bar-wrap" style="position:relative">
+        <div class="funnel-bar" style="width:${w}%;background:${colors[i]};min-width:0">${showInside?vals[i].toLocaleString():''}</div>
+        ${!showInside?`<span style="position:absolute;left:${w+1}%;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:${colors[i]};white-space:nowrap">${vals[i].toLocaleString()}</span>`:''}
       </div>
       <div class="funnel-pct">${i===0?'100%':pct(vals[i],vals[0])}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderEngGrid(data){
@@ -318,10 +322,13 @@ function renderSourceChart(data){
 }
 
 function renderMoMChart(){
-  const dealers=Object.keys(DEALER_LABELS);
-  const labels=dealers.map(d=>DEALER_LABELS[d]);
+  // Respect dealer filter — show single dealer or all
+  const allDealers=Object.keys(DEALER_LABELS);
+  const dealers=currentDealer==='all'?allDealers:[currentDealer];
+  const labels=dealers.map(d=>DEALER_LABELS[d]||d);
   const raw=currentPeriod.startsWith('2025')?RAW2025:RAW2026;
   let p1rows=[],p2rows=[],p1label='',p2label='';
+  const dealerFilter=r=>currentDealer==='all'||r[0]===currentDealer;
   const srcFilter=r=>currentSource==='all'||r[3].toLowerCase()===currentSource.toLowerCase();
 
   if(currentPeriod==='jan26'){p2rows=RAW2026.filter(r=>r[2]===1);p2label='Jan 2026';}
@@ -334,8 +341,8 @@ function renderMoMChart(){
 
   document.getElementById('momChartTitle').textContent=p1label?`${p1label} vs ${p2label} — Video Starts`:`${p2label} — Video Starts`;
   if(momChart)momChart.destroy();
-  const datasets=[{label:p2label,data:dealers.map(d=>sum(p2rows.filter(r=>r[0]===d&&srcFilter(r)),'view_start')),backgroundColor:'#e8f03a',borderRadius:3}];
-  if(p1label) datasets.unshift({label:p1label,data:dealers.map(d=>sum(p1rows.filter(r=>r[0]===d&&srcFilter(r)),'view_start')),backgroundColor:'rgba(232,240,58,0.35)',borderColor:'#e8f03a',borderWidth:1,borderRadius:3});
+  const datasets=[{label:p2label,data:dealers.map(d=>sum(p2rows.filter(r=>r[0]===d&&srcFilter(r)&&dealerFilter(r)),'view_start')),backgroundColor:'#e8f03a',borderRadius:3}];
+  if(p1label) datasets.unshift({label:p1label,data:dealers.map(d=>sum(p1rows.filter(r=>r[0]===d&&srcFilter(r)&&dealerFilter(r)),'view_start')),backgroundColor:'rgba(232,240,58,0.35)',borderColor:'#e8f03a',borderWidth:1,borderRadius:3});
   momChart=new Chart(document.getElementById('momChart').getContext('2d'),{type:'bar',data:{labels,datasets},options:{responsive:true,plugins:{legend:{labels:{color:'#6b7490',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#6b7490',font:{size:9},maxRotation:40},grid:{color:'#1a1e28'}},y:{ticks:{color:'#6b7490',font:{size:10}},grid:{color:'#252a38'}}}}});
 }
 
